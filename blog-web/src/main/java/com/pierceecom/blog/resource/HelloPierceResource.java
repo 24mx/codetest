@@ -1,4 +1,4 @@
-package com.pierceecom.blog;
+package com.pierceecom.blog.resource;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -8,6 +8,7 @@ import javax.ws.rs.core.Response;
 
 @Path("hello-pierce")
 public class HelloPierceResource {
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response hello() {
