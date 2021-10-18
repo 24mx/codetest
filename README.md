@@ -203,7 +203,7 @@ Please follow the steps below:
     Payara Micro is enough to run
 3. Run the command: "mvn install" in the root folder of the distributionfolder.
 4. Run the blog-web
-    > java -jar payara-micro-4.1.152.1.jar --deploy blog-web\target\blog-web.war
+    > java -jar payara-micro-5.2021.7.jar --deploy blog-web\target\blog-web.war
 5. Go to address: http://localhost:8080/blog-web/hello-pierce. The server should respond with a text that reads: {"message":"Hello Pierce"}.
 6. Now basic environment and Blog Ping project is installed correctly.
 

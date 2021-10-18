@@ -36,6 +36,7 @@
         </plugins>
     </build>
     <modules>
+        <module>blog-api</module>
         <module>blog-web</module>
         <module>integration-test</module>
     </modules>

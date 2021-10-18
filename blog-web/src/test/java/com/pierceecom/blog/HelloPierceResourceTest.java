@@ -1,6 +1,8 @@
 package com.pierceecom.blog;
 
 import javax.ws.rs.core.Response;
+
+import com.pierceecom.blog.resource.HelloPierceResource;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
