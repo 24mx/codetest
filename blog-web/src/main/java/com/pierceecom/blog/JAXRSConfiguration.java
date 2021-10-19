@@ -1,7 +1,7 @@
 package com.pierceecom.blog;
 
-import com.pierceecom.blog.resource.HelloPierceResource;
-import com.pierceecom.blog.resource.PostsResource;
+import com.pierceecom.blog.controller.HelloPierceController;
+import com.pierceecom.blog.controller.PostsController;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -13,8 +13,8 @@ public class JAXRSConfiguration  extends Application {
     @Override
     public Set<Class<?>> getClasses() {
         HashSet<Class<?>> classes = new HashSet<>();
-        classes.add(HelloPierceResource.class);
-        classes.add(PostsResource.class);
+        classes.add(HelloPierceController.class);
+        classes.add(PostsController.class);
         return classes;
     }
 }

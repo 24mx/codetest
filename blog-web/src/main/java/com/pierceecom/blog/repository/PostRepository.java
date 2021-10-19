@@ -2,6 +2,7 @@ package com.pierceecom.blog.repository;
 
 import com.pierceecom.blog.model.Post;
 import com.pierceecom.blog.repository.entity.PostEntity;
+import com.pierceecom.blog.repository.mapper.PostMapper;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.persistence.EntityManager;
@@ -21,17 +22,17 @@ public class PostRepository {
     @Transactional(REQUIRED)
     public Long create(Post post) {
 
-        PostEntity entity = new PostEntity();
-        entity.setTitle(post.getTitle());
-        entity.setContent(post.getContent());
+        PostEntity entity = PostMapper.map(post, new PostEntity());
+        em.persist(PostMapper.map(post, new PostEntity()));
 
-        em.persist(entity);
         return entity.getId();
     }
 
     @Transactional(REQUIRED)
     public boolean delete(Integer postId) {
+
         PostEntity entity = em.find(PostEntity.class, Long.valueOf(postId.toString()));
+
         if (entity != null) {
             em.remove(entity);
             return true;
@@ -42,12 +43,11 @@ public class PostRepository {
 
     @Transactional(REQUIRED)
     public boolean update(Post post) {
+
         PostEntity entity = em.find(PostEntity.class, Long.valueOf(post.getId()));
 
         if (entity != null) {
-            entity.setTitle(post.getTitle());
-            entity.setContent(post.getContent());
-            em.merge(entity);
+            em.merge(PostMapper.map(post, entity));
             return true;
         }
 
@@ -55,34 +55,24 @@ public class PostRepository {
     }
 
     public List<Post> find(Integer postId) {
-        String p = postId.toString();
-        Long l = Long.valueOf(postId.toString());
 
         PostEntity postEntity = em.find(PostEntity.class, Long.valueOf(postId.toString()));
 
         List<Post> result = new ArrayList<>();
         if (postEntity != null) {
-            Post post = new Post();
-            post.setId(postEntity.getId().toString());
-            post.setTitle(postEntity.getTitle());
-            post.setContent(postEntity.getContent());
-            result.add(post);
+            result.add(PostMapper.map(postEntity, new Post()));
         }
 
         return result;
     }
 
     public List<Post> findAll() {
+
         List<PostEntity> dbResult = em.createQuery("SELECT p FROM PostEntity p", PostEntity.class).getResultList();
 
         List<Post> result = new ArrayList<>();
-        dbResult.forEach(postEntity -> {
-            Post post = new Post();
-            post.setId(postEntity.getId().toString());
-            post.setTitle(postEntity.getTitle());
-            post.setContent(postEntity.getContent());
-            result.add(post);
-        });
+        dbResult.forEach(postEntity ->
+            result.add(PostMapper.map(postEntity, new Post())));
 
         return result;
     }

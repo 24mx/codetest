@@ -1,4 +1,4 @@
-package com.pierceecom.blog.resource;
+package com.pierceecom.blog.controller;
 
 import com.pierceecom.blog.api.PostsApi;
 import com.pierceecom.blog.model.Post;
@@ -7,28 +7,28 @@ import com.pierceecom.blog.service.PostsService;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import java.net.URI;
 import java.util.List;
 
-public class PostsResource implements PostsApi {
+public class PostsController implements PostsApi {
 
     private PostsService postsService;
 
-    protected PostsResource() {}
+    protected PostsController() {
+        // weld wants this...
+    }
 
     @Inject
-    public PostsResource(PostsService postsService) {
+    public PostsController(PostsService postsService) {
         this.postsService = postsService;
     }
 
     @Override
     public Response addPost(Post post, SecurityContext securityContext) {
-        URI uri = postsService.addPost(post);
-
-        return (uri != null) ?
-                Response.created(uri).build()
-                :
-                Response.status(400).build();
+        try {
+            return Response.created(postsService.addPost(post)).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(400).build();
+        }
     }
 
     @Override
@@ -56,11 +56,10 @@ public class PostsResource implements PostsApi {
 
     @Override
     public Response updateOrCreatePost(Post post, SecurityContext securityContext) {
-        URI uri = postsService.updateOrCreatePost(post);
-
-        return (uri != null) ?
-                Response.created(uri).build()
-                :
-                Response.status(400).build();
+        try {
+            return Response.created(postsService.updateOrCreatePost(post)).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(400).build();
+        }
     }
 }

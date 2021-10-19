@@ -2,22 +2,22 @@ package com.pierceecom.blog.service;
 
 import com.pierceecom.blog.model.Post;
 import com.pierceecom.blog.repository.PostRepository;
-import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 
 @ApplicationScoped
 public class PostsService {
 
-    private static final Logger LOGGER = Logger.getLogger(PostsService.class);
+    protected final static String POSTS_URL = "http://localhost:8080/blog-web/posts/";
 
     private PostRepository postRepository;
 
-    protected PostsService() {}
+    protected PostsService() {
+        // weld wants this...
+    }
 
     @Inject
     public PostsService(PostRepository postRepository) {
@@ -25,15 +25,8 @@ public class PostsService {
     }
 
     public URI addPost(Post post) {
-
         Long id = postRepository.create(post);
-
-        try {
-            return new URI("http://localhost:8080/blog-web/posts/" + id);
-        } catch (URISyntaxException e) {
-            LOGGER.error(e.getMessage(), e);
-            return null;
-        }
+        return URI.create(POSTS_URL + id);
     }
 
     public boolean deletePost(Integer postId) {
@@ -49,15 +42,10 @@ public class PostsService {
     }
 
     public URI updateOrCreatePost(Post post) {
-        try {
-            if (postRepository.update(post)) {
-                return new URI("http://localhost:8080/blog-web/posts/" + post.getId());
-            } else {
-                return addPost(post);
-            }
-        } catch (URISyntaxException e) {
-            LOGGER.error(e.getMessage(), e);
-            return null;
+        if (postRepository.update(post)) {
+            return URI.create(POSTS_URL + post.getId());
+        } else {
+            return addPost(post);
         }
     }
 }

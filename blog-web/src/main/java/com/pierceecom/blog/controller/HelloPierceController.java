@@ -1,4 +1,4 @@
-package com.pierceecom.blog.resource;
+package com.pierceecom.blog.controller;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -7,7 +7,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Path("hello-pierce")
-public class HelloPierceResource {
+public class HelloPierceController {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
