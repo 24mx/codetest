@@ -33,7 +33,7 @@ public class PostMapperTest {
         PostEntity result = PostMapper.map(post, new PostEntity());
 
         // Assert
-        assertThat(result.getId()).isEqualTo(postEntity.getId());
+        assertThat(result.getId()).isNull();
         assertThat(result.getTitle()).isEqualTo(postEntity.getTitle());
         assertThat(result.getContent()).isEqualTo(postEntity.getContent());
     }

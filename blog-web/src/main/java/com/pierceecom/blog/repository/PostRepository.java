@@ -23,7 +23,7 @@ public class PostRepository {
     public Long create(Post post) {
 
         PostEntity entity = PostMapper.map(post, new PostEntity());
-        em.persist(PostMapper.map(post, new PostEntity()));
+        em.persist(entity);
 
         return entity.getId();
     }
@@ -44,11 +44,13 @@ public class PostRepository {
     @Transactional(REQUIRED)
     public boolean update(Post post) {
 
-        PostEntity entity = em.find(PostEntity.class, Long.valueOf(post.getId()));
+        if (post.getId() != null) {
+            PostEntity entity = em.find(PostEntity.class, Long.valueOf(post.getId()));
 
-        if (entity != null) {
-            em.merge(PostMapper.map(post, entity));
-            return true;
+            if (entity != null) {
+                em.merge(PostMapper.map(post, entity));
+                return true;
+            }
         }
 
         return false;

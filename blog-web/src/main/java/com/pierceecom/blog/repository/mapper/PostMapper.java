@@ -7,9 +7,6 @@ public class PostMapper {
 
     public static PostEntity map(Post post, PostEntity postEntity) {
 
-        if (postEntity.getId() == null) {
-            postEntity.setId(Long.valueOf(post.getId()));
-        }
         postEntity.setTitle(post.getTitle());
         postEntity.setContent(post.getContent());
 
