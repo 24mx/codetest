@@ -3,10 +3,10 @@ package com.pierceecom.blog;
 import com.pierceecom.blog.controller.HelloPierceController;
 import com.pierceecom.blog.controller.PostsController;
 
-import java.util.HashSet;
-import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
+import java.util.HashSet;
+import java.util.Set;
 
 @ApplicationPath("/")
 public class JAXRSConfiguration  extends Application {
