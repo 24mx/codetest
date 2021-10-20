@@ -43,17 +43,16 @@ public class PostRepository {
 
     @Transactional(REQUIRED)
     public boolean update(Post post) {
-
-        if (post.getId() != null) {
+        try {
             PostEntity entity = em.find(PostEntity.class, Long.valueOf(post.getId()));
-
             if (entity != null) {
                 em.merge(PostMapper.map(post, entity));
                 return true;
             }
+            return false;
+        } catch(NumberFormatException e) {
+            return false;
         }
-
-        return false;
     }
 
     public List<Post> find(Integer postId) {

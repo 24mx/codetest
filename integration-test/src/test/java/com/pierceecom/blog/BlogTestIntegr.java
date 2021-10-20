@@ -6,6 +6,7 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,80 +20,104 @@ public class BlogTestIntegr {
 
     @Test
     public void test_1_BlogWithoutPosts() {
+        // Setup
+
+        // Act
         Response response = BlogRestClient.getAllPosts();
+
+        // Assert
         assertThat(response.statusCode()).isEqualTo(200);
         assertThat(response.body().as(List.class)).isEmpty();
     }
 
     @Test
-    public void test_2_AddPosts() {
+    public void test_2_AddPost() {
+        // Setup
         Post post = new Post();
         post.setTitle("title");
         post.setContent("content");
 
+        // Act
         Response response = BlogRestClient.addPost(post);
-        assertThat(response.getHeaders().get("Location").getValue()).isEqualTo(BlogRestClient.POSTS_URI + "1");
 
-        response = BlogRestClient.addPost(post);
-        assertThat(response.getHeaders().get("Location").getValue()).isEqualTo(BlogRestClient.POSTS_URI + "2");
+        // Assert
+        assertThat(response.getHeaders().get("Location").getValue()).isNotEmpty();
     }
 
     @Test
     public void test_3_GetPost() {
-        Response response = BlogRestClient.getPostById(1);
-        assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.body().as(Post.class).getId()).isEqualTo("1");
+        // Setup
+        Response response = BlogRestClient.getAllPosts();
+        Post post = Arrays.asList(response.getBody().as(Post[].class)).get(0);
 
-        response = BlogRestClient.getPostById(2);
+        // Act
+        response = BlogRestClient.getPostById(Integer.parseInt(post.getId()));
+
+        // Assert
         assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.body().as(Post.class).getId()).isEqualTo("2");
+        assertThat(response.body().as(Post.class).getId()).isEqualTo(post.getId());
     }
 
     @Test
     public void test_4_GetAllPosts() {
+        // Setup
+
+        // Act
         Response response = BlogRestClient.getAllPosts();
+
+        // Assert
         assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.body().as(List.class).size()).isEqualTo(2);
+        assertThat(response.body().as(List.class)).isNotEmpty();
     }
 
     @Test
     public void test_5_updateOrCreatePosts() {
-        Post post = new Post();
-        post.setId("1");
+        // Update an existing Post
+        // Setup
+        Response response = BlogRestClient.getAllPosts();
+        Post post = Arrays.asList(response.getBody().as(Post[].class)).get(0);
         post.setTitle("Update Title");
         post.setContent("Update Content");
 
-        Response response = BlogRestClient.updateOrCreatePost(post);
+        // Act
+        response = BlogRestClient.updateOrCreatePost(post);
+
+        // Assert
         assertThat(response.statusCode()).isEqualTo(201);
-        assertThat(response.getHeaders().get("Location").getValue()).isEqualTo(BlogRestClient.POSTS_URI + "1");
-        response = BlogRestClient.getPostById(1);
+        assertThat(response.getHeaders().get("Location").getValue()).isEqualTo(BlogRestClient.POSTS_URI + post.getId());
+        response = BlogRestClient.getPostById(Integer.parseInt(post.getId()));
         assertThat(response.statusCode()).isEqualTo(200);
         assertThat(response.body().as(Post.class).getTitle()).isEqualTo("Update Title");
+
+        // Create a new Post
+        // Setup
+        response = BlogRestClient.getAllPosts();
+        List<Post> posts = Arrays.asList(response.getBody().as(Post[].class));
 
         post = new Post();
         post.setTitle("Update Title");
         post.setContent("Update Content");
 
+        // Act
         response = BlogRestClient.updateOrCreatePost(post);
+
+        // Assert
         assertThat(response.statusCode()).isEqualTo(201);
-        assertThat(response.getHeaders().get("Location").getValue()).isEqualTo(BlogRestClient.POSTS_URI + "3");
+        int id = Integer.parseInt(posts.get(posts.size() - 1).getId()) + 1;
+        assertThat(response.getHeaders().get("Location").getValue()).isEqualTo(BlogRestClient.POSTS_URI + id);
     }
 
     @Test
     public void test_6_DeletePosts() {
-        Response response = BlogRestClient.deletePost(1);
-        assertThat(response.statusCode()).isEqualTo(200);
-        response = BlogRestClient.getPostById(1);
-        assertThat(response.statusCode()).isEqualTo(204);
-
-        BlogRestClient.deletePost(2);
-        BlogRestClient.deletePost(3);
-
-    }
-
-    @Test
-    public void test_6_GetAllPostsShouldNowBeEmpty() {
+        // Setup
         Response response = BlogRestClient.getAllPosts();
+        List<Post> posts = Arrays.asList(response.getBody().as(Post[].class));
+
+        // Act
+        posts.forEach(post -> BlogRestClient.deletePost(Integer.parseInt(post.getId())));
+        response = BlogRestClient.getAllPosts();
+
+        // Assert
         assertThat(response.statusCode()).isEqualTo(200);
         assertThat(response.body().as(List.class)).isEmpty();
     }
