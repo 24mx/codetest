@@ -203,7 +203,7 @@ Please follow the steps below:
     Payara Micro is enough to run
 3. Run the command: "mvn install" in the root folder of the distributionfolder.
 4. Run the blog-web
-    > java -jar payara-micro-4.1.152.1.jar --deploy blog-web\target\blog-web.war
+    > java -jar payara-micro-5.2021.8.jar --deploy blog-web\target\blog-web.war
 5. Go to address: http://localhost:8080/blog-web/hello-pierce. The server should respond with a text that reads: {"message":"Hello Pierce"}.
 6. Now basic environment and Blog Ping project is installed correctly.
 
@@ -214,7 +214,7 @@ Please follow the steps below:
 The integration tests is (and should be) located under the maven artifact "integration test". 
 These tests should test the expected behavior of a correct implementation of Blog posts. 
 
-There is a simple test to start with. You run the test with "mvn test-Dtest =*TestIntegr" .
+There is a simple test to start with. You run the test with "mvn test -Dtest=*TestIntegr" .
 
 The tests and flow is a suggestion and may not use the most convinient APIs to do it, you may change.
 You should fill in with extra tests (and expect that we do to ;) )
