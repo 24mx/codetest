@@ -19,7 +19,7 @@ opportunity to submit, please perform the following worksample:
 The goal of the test is to show how you would normally take on a 
 java-based programming task.
 
-The assessment will be based on following criterias:
+The assessment will be based on following criteria:
  - Clean design
  - Reuse (of code and 3rd party products)
  - Maintainability
@@ -27,7 +27,7 @@ The assessment will be based on following criterias:
  - Java Knowledge Base
  - Coding style
 
-You decide how "deep" you go when implementing the task to satisfy the criterias.
+You decide how "deep" you go when implementing the task to satisfy the criteria.
 
 ================================================================================
 2 Assignment - Blog REST-service
@@ -37,7 +37,7 @@ Write a RESTful service that implement a simple version of serving blog-posts.
 A "Post" have the attributes [id:String, title:String, content:String]
 
 We would like to see:
- - A client (command line or webapp) that calls a the servive with the correct arguments (and handles all possible/plausible errors) using REST API
+ - A client (command line or webapp) that calls the service with the correct arguments (and handles all possible/plausible errors) using REST API
     - The client should be able to add, list, view and delete posts.
  - A blog server that can serve a REST-service according to the Swagger-specification below. 
     - That is:
@@ -47,7 +47,7 @@ We would like to see:
         - Delete one post by id
 
 The REST service should support the following resources
-(swagger, can be viewd in editor.swagger.io)
+(swagger, can be viewed in editor.swagger.io)
 --------------------------------------------------------------------------------
 ```
 swagger: "2.0"
@@ -216,5 +216,5 @@ These tests should test the expected behavior of a correct implementation of Blo
 
 There is a simple test to start with. You run the test with "mvn test-Dtest =*TestIntegr" .
 
-The tests and flow is a suggestion and may not use the most convinient APIs to do it, you may change.
+The tests and flow is a suggestion and may not use the most convenient APIs to do it, you may change.
 You should fill in with extra tests (and expect that we do to ;) )
