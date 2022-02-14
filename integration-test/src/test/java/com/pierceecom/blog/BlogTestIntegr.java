@@ -1,18 +1,19 @@
 package com.pierceecom.blog;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import static org.junit.Assert.*;
+import static io.restassured.RestAssured.with;
+import static io.restassured.RestAssured.get;
+import static org.hamcrest.Matchers.is;
+
+import java.util.List;
+
+import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
+
+import io.restassured.RestAssured;
+import jakarta.ws.rs.core.MediaType;
+
 
 /**
  * TODO, Consider it part of the test to replace HttpURLConnection with better
@@ -21,124 +22,126 @@ import org.junit.runners.MethodSorters;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class BlogTestIntegr {
 
-    private static final String POST_1 = "{\"id\":\"1\",\"title\":\"First title\",\"content\":\"First content\"}";
-    private static final String POST_2 = "{\"id\":\"2\",\"title\":\"Second title\",\"content\":\"Second content\"}";
-    private static final String POSTS_URI = "http://localhost:8080/blog-web/posts/";
-
+    private static final String VALID_POST = "{\"id\":\"\",\"title\":\"First title\",\"content\":\"First content\"}";
+    private static final String INVALID_POST = "{\"id\":\"\",\"title\":\"Second title\",\"content\":\"Invalid content🙂\"}";
+    private static final String UPDATE_POST = "{\"id\":\"ID\",\"title\":\"First title\",\"content\":\"Content Updated\"}";
     
     public BlogTestIntegr() {
     }
-
-    @Test
-    public void test_1_BlogWithoutPosts() {
-        String output = GET(POSTS_URI, 200);
-        assertEquals("[]", output);
-    }
-
-    @Test
-    public void test_2_AddPosts() {
-        String location = POST(POSTS_URI, POST_1);
-        assertEquals(POSTS_URI + "1", location);
-
-        location = POST(POSTS_URI, POST_2);
-        assertEquals(POSTS_URI + "2", location);
-    }
-
-    @Test
-    public void test_3_GetPost() {
-        String postJson = GET(POSTS_URI + "1", 200);
-        assertEquals(POST_1, postJson);
-
-        postJson = GET(POSTS_URI + "2", 200);
-        assertEquals(POST_2, postJson);
-    }
-
-    @Test
-    public void test_4_GetAllPosts() {
-        String output = GET(POSTS_URI, 200);
-        assertEquals("[" + POST_1 + "," + POST_2 + "]", output);
+    
+    @Before
+    public void setup(){
+        RestAssured.baseURI = "http://localhost:8080/blog-web";
     }
     
     @Test
-    public void test_5_DeletePosts() {
-        DELETE(POSTS_URI + "1", 200);        
-        // Should now be gone
-        GET(POSTS_URI + "1", 204);
-
-        DELETE(POSTS_URI + "2", 200);        
-        // Should now be gone
-        GET(POSTS_URI + "2", 204);      
-
-    }
-
+   	public void  test_1_0_GetAllPosts_NoPost() {
+    	get("/posts")
+    	.then()
+    	.assertThat()
+    	.body(is("[]"));
+   	}
+    
     @Test
-    public void test_6_GetAllPostsShouldNowBeEmpty() {
-        String output = GET(POSTS_URI, 200);
-        assertEquals("[]", output);
+	public void  test_2_0_AddPost_Ok() {
+		  with()
+		  .body(VALID_POST)
+		  .contentType(MediaType.APPLICATION_JSON)
+		  .when()
+		  .request("POST", "/posts")
+		  .then()
+		  .statusCode(201);
+	}
+    
+    @Test
+	public void  test_2_1_AddPost_InvalidContent() {
+		  with()
+		  .body(INVALID_POST)
+		  .contentType(MediaType.APPLICATION_JSON)
+		  .when()
+		  .request("POST", "/posts")
+		  .then()
+		  .statusCode(400);
+	}
+
+	@Test
+    public void test_3_0_GetPost_Ok() {
+		get("/posts/"+getPostId())
+		.then()
+		.statusCode(200);
     }
-
-    /* Helper methods */
-    private String GET(String uri, int expectedResponseCode) {
-        StringBuilder sb = new StringBuilder();
-        try {
-            URL url = new URL(uri);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty("Accept", "application/json");
-            assertEquals(expectedResponseCode, conn.getResponseCode());
-            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
-
-            String output;
-            while ((output = br.readLine()) != null) {
-                sb.append(output);
-            }
-
-            conn.disconnect();
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(BlogTestIntegr.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(BlogTestIntegr.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return sb.toString();
+	
+	@Test
+    public void test_3_1_GetPost_NoContent() {
+		get("/posts/WrongId")
+		.then()
+		.statusCode(204);
     }
-
-    private String POST(String uri, String json) {
-        String location = "";
-        try {
-            URL url = new URL(uri);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setDoOutput(true);
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "application/json");
-
-            OutputStream os = conn.getOutputStream();
-            os.write(json.getBytes());
-            os.flush();
-            assertEquals(201, conn.getResponseCode());
-
-            location = conn.getHeaderField("Location");
-            conn.disconnect();
-
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(BlogTestIntegr.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(BlogTestIntegr.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return location;
+	
+    @Test
+    public void test_4_0_GetAllPosts() {
+    	get("/posts")
+    	.then()
+    	.assertThat()
+		.statusCode(200);
     }
-
-    private void DELETE(String uri, int expectedResponseCode) {
-        try {
-            URL url = new URL(uri);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("DELETE");
-            conn.setRequestProperty("Accept", "application/json");
-            assertEquals(expectedResponseCode, conn.getResponseCode());
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(BlogTestIntegr.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(BlogTestIntegr.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    
+    @Test
+    public void test_5_0_UpdatePost_Ok() {
+    	String post = UPDATE_POST.replace("ID", getPostId());
+    	with()
+		  .body(post)
+		  .contentType(MediaType.APPLICATION_JSON)
+		  .when()
+		  .request("PUT", "/posts")
+		  .then()
+		  .statusCode(201)
+		  .assertThat()
+		  .body("content", is("Content Updated"));
+    }
+    
+    @Test
+    public void test_5_1_UpdatePost_NotFound() {
+    	with()
+		  .body(UPDATE_POST)
+		  .contentType(MediaType.APPLICATION_JSON)
+		  .when()
+		  .request("PUT", "/posts")
+		  .then()
+		  .statusCode(404);
+    }
+    
+    @Test
+    public void test_6_0_DeletePost_NotFound() {
+    	with()
+		  .request("DELETE", "/posts/WrongId")
+		  .then()
+		  .statusCode(404);
+    }
+    
+    @Test
+    public void test_6_1_DeletePost_Ok() {
+    	with()
+		  .request("DELETE", "/posts/"+getPostId())
+		  .then()
+		  .statusCode(200);
+    }
+    
+	@Test
+	public void test_7_0_GetAllPostsShouldNowBeEmpty() {
+		get("/posts")
+	  	  .then()
+	  	  .assertThat()
+	  	  .body(is("[]"));
+	  }
+    
+	  // Helper method.
+    private String getPostId() {
+    	List<String> postIds = get("/posts")
+				.getBody()
+				.jsonPath()
+				.getList("id");
+		return postIds.get(0);
     }
 
 }
