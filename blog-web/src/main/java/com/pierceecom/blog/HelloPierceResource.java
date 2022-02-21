@@ -1,16 +1,18 @@
+
 package com.pierceecom.blog;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-@Path("hello-pierce")
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@RequestMapping("/blog-web")
 public class HelloPierceResource {
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response hello() {
-        return Response.ok("{\"message\":\"Hello Pierce\"}").build();
-    }
+
+
+	@GetMapping(value = "/hello-pierce", produces = MediaType.APPLICATION_JSON_VALUE)
+	public Response hello() {
+		return  Response.ok("{\"message\":\"Hello Pierce\"}").build();
+	}
 }
