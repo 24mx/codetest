@@ -1,0 +1,128 @@
+openapi: 3.0.3
+
+info:
+  description: 'This is the definition of the API for code test as Pierce AB'
+  version: '1.0.0'
+  title: 'Simple blog post API'
+
+servers:
+  - url: http://localhost:8080/blog-web/
+
+paths:
+
+  /posts:
+    get:
+      tags:
+        - post
+      summary: 'Get all posts'
+      description: 'Returns all posts'
+      operationId: 'getAllPosts'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+    post:
+      tags:
+        - post
+      summary: 'Add a new post'
+      description: ''
+      operationId: 'addPost'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Post'
+      responses:
+        '201':
+          description: OK of post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          description: 'Invalid input'
+    put:
+      tags:
+        - post
+      summary: 'Updates a post'
+      description: ''
+      operationId: 'updateOrCreatePost'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Post'
+      responses:
+        '201':
+          description: OK of post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          description: 'Invalid input'
+
+  /posts/{postId}:
+    get:
+      tags:
+        - post
+      summary: 'Find post by ID'
+      description: 'Returns a single post'
+      operationId: 'getPostById'
+      parameters:
+        - in: path
+          name: postId
+          schema:
+            type: integer
+          description: 'ID of post to return'
+          required: true
+      responses:
+        '200':
+          description: 'successful operation'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '204':
+          description: 'No content'
+    delete:
+      tags:
+        - post
+      summary: 'Deletes a post'
+      description: ''
+      operationId: 'deletePost'
+      parameters:
+        - in: path
+          name: postId
+          schema:
+            type: integer
+          description: 'Post ID to delete'
+          required: true
+      responses:
+        '200':
+          description: 'successful operation'
+        '404':
+          description: 'Post not found'
+
+components:
+  schemas:
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        title:
+          type: string
+          minLength: 1
+          example: 'What I did today'
+        content:
+          type: string
+          minLength: 1
+          example: 'wrote a boring post'
+      required:
+        - title
+        - content

@@ -1,18 +1,15 @@
 package com.pierceecom.blog;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import static org.junit.Assert.*;
+import com.pierceecom.blog.model.Post;
+import io.restassured.response.Response;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * TODO, Consider it part of the test to replace HttpURLConnection with better
@@ -21,124 +18,108 @@ import org.junit.runners.MethodSorters;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class BlogTestIntegr {
 
-    private static final String POST_1 = "{\"id\":\"1\",\"title\":\"First title\",\"content\":\"First content\"}";
-    private static final String POST_2 = "{\"id\":\"2\",\"title\":\"Second title\",\"content\":\"Second content\"}";
-    private static final String POSTS_URI = "http://localhost:8080/blog-web/posts/";
-
-    
-    public BlogTestIntegr() {
-    }
-
     @Test
     public void test_1_BlogWithoutPosts() {
-        String output = GET(POSTS_URI, 200);
-        assertEquals("[]", output);
+        // Setup
+
+        // Act
+        Response response = BlogRestClient.getAllPosts();
+
+        // Assert
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body().as(List.class)).isEmpty();
     }
 
     @Test
-    public void test_2_AddPosts() {
-        String location = POST(POSTS_URI, POST_1);
-        assertEquals(POSTS_URI + "1", location);
+    public void test_2_AddPost() {
+        // Setup
+        Post post = new Post();
+        post.setTitle("title");
+        post.setContent("content");
 
-        location = POST(POSTS_URI, POST_2);
-        assertEquals(POSTS_URI + "2", location);
+        // Act
+        Response response = BlogRestClient.addPost(post);
+
+        // Assert
+        assertThat(response.getHeaders().get("Location").getValue()).isNotEmpty();
     }
 
     @Test
     public void test_3_GetPost() {
-        String postJson = GET(POSTS_URI + "1", 200);
-        assertEquals(POST_1, postJson);
+        // Setup
+        Response response = BlogRestClient.getAllPosts();
+        Post post = Arrays.asList(response.getBody().as(Post[].class)).get(0);
 
-        postJson = GET(POSTS_URI + "2", 200);
-        assertEquals(POST_2, postJson);
+        // Act
+        response = BlogRestClient.getPostById(Integer.parseInt(post.getId()));
+
+        // Assert
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body().as(Post.class).getId()).isEqualTo(post.getId());
     }
 
     @Test
     public void test_4_GetAllPosts() {
-        String output = GET(POSTS_URI, 200);
-        assertEquals("[" + POST_1 + "," + POST_2 + "]", output);
-    }
-    
-    @Test
-    public void test_5_DeletePosts() {
-        DELETE(POSTS_URI + "1", 200);        
-        // Should now be gone
-        GET(POSTS_URI + "1", 204);
+        // Setup
 
-        DELETE(POSTS_URI + "2", 200);        
-        // Should now be gone
-        GET(POSTS_URI + "2", 204);      
+        // Act
+        Response response = BlogRestClient.getAllPosts();
 
+        // Assert
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body().as(List.class)).isNotEmpty();
     }
 
     @Test
-    public void test_6_GetAllPostsShouldNowBeEmpty() {
-        String output = GET(POSTS_URI, 200);
-        assertEquals("[]", output);
+    public void test_5_updateOrCreatePosts() {
+        // Update an existing Post
+        // Setup
+        Response response = BlogRestClient.getAllPosts();
+        Post post = Arrays.asList(response.getBody().as(Post[].class)).get(0);
+        post.setTitle("Update Title");
+        post.setContent("Update Content");
+
+        // Act
+        response = BlogRestClient.updateOrCreatePost(post);
+
+        // Assert
+        assertThat(response.statusCode()).isEqualTo(201);
+        assertThat(response.getHeaders().get("Location").getValue()).isEqualTo(BlogRestClient.POSTS_URI + post.getId());
+        response = BlogRestClient.getPostById(Integer.parseInt(post.getId()));
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body().as(Post.class).getTitle()).isEqualTo("Update Title");
+
+        // Create a new Post
+        // Setup
+        response = BlogRestClient.getAllPosts();
+        List<Post> posts = Arrays.asList(response.getBody().as(Post[].class));
+
+        post = new Post();
+        post.setTitle("Update Title");
+        post.setContent("Update Content");
+
+        // Act
+        response = BlogRestClient.updateOrCreatePost(post);
+
+        // Assert
+        assertThat(response.statusCode()).isEqualTo(201);
+        int id = Integer.parseInt(posts.get(posts.size() - 1).getId()) + 1;
+        assertThat(response.getHeaders().get("Location").getValue()).isEqualTo(BlogRestClient.POSTS_URI + id);
     }
 
-    /* Helper methods */
-    private String GET(String uri, int expectedResponseCode) {
-        StringBuilder sb = new StringBuilder();
-        try {
-            URL url = new URL(uri);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty("Accept", "application/json");
-            assertEquals(expectedResponseCode, conn.getResponseCode());
-            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+    @Test
+    public void test_6_DeletePosts() {
+        // Setup
+        Response response = BlogRestClient.getAllPosts();
+        List<Post> posts = Arrays.asList(response.getBody().as(Post[].class));
 
-            String output;
-            while ((output = br.readLine()) != null) {
-                sb.append(output);
-            }
+        // Act
+        posts.forEach(post -> BlogRestClient.deletePost(Integer.parseInt(post.getId())));
+        response = BlogRestClient.getAllPosts();
 
-            conn.disconnect();
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(BlogTestIntegr.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(BlogTestIntegr.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return sb.toString();
-    }
-
-    private String POST(String uri, String json) {
-        String location = "";
-        try {
-            URL url = new URL(uri);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setDoOutput(true);
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "application/json");
-
-            OutputStream os = conn.getOutputStream();
-            os.write(json.getBytes());
-            os.flush();
-            assertEquals(201, conn.getResponseCode());
-
-            location = conn.getHeaderField("Location");
-            conn.disconnect();
-
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(BlogTestIntegr.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(BlogTestIntegr.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return location;
-    }
-
-    private void DELETE(String uri, int expectedResponseCode) {
-        try {
-            URL url = new URL(uri);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("DELETE");
-            conn.setRequestProperty("Accept", "application/json");
-            assertEquals(expectedResponseCode, conn.getResponseCode());
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(BlogTestIntegr.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(BlogTestIntegr.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        // Assert
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body().as(List.class)).isEmpty();
     }
 
 }
